@@ -1,0 +1,27 @@
+- name: Deploy a static website
+  hosts: azure_vms
+  become: yes
+  tasks:
+    - name: Ensure Nginx is installed
+      apt:
+        name: nginx
+        state: present
+    - name: Create index page with links
+      copy:
+        content: |
+          <html>
+          <head><title>Jagruti's Ansible Site</title></head>
+          <body>
+          <h1>Jagruti's Ansible Site</h1>
+          <p>Visit my pages:</p>
+          <ul>
+          <li><a href="/welcome.html">Welcome</a></li>
+          <li><a href="/goodbye.html">Goodbye</a></li>
+          </ul>
+          </body>
+          </html>
+        dest: /var/www/html/index.html
+    - name: Restart Nginx
+      service:
+        name: nginx
+        state: restarted

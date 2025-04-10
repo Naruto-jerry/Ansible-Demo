@@ -1,0 +1,11 @@
+- name: Update and install packages list on Azure VM
+  hosts: azure_vms
+  become: yes  # Run as sudo
+  tasks:
+    - name: Run apt update
+      apt:
+        update_cache: yes
+    - name: Install curl
+      apt:
+        name: curl
+        state: present

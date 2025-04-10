@@ -1,0 +1,17 @@
+- name: set up nginx web server
+  hosts: azure_vms
+  become: yes
+  tasks:
+    - name: Install Nginx
+      apt:
+        name: nginx
+        state: present
+    - name: Start Nginx
+      service:
+        name: nginx
+        state: started
+        enabled: yes
+    - name: Add simple webpage
+      copy:
+        content: "<h>Hello this is from Ansible<h>"
+        dest: /var/www/html/index.html

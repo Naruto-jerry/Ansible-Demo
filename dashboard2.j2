@@ -1,0 +1,11 @@
+<html>
+<head><title>Jagruti's Ansible Dashboard (Project 2)</title></head>
+<body>
+<h1>Jagruti's Ansible Dashboard (Project 2)</h1>
+<h2>System Info</h2>
+<p><strong>Uptime:</strong> {{ uptime_result.stdout }}</p>
+<p><strong>Disk Space (Root):</strong> {{ disk_result.stdout }}</p>
+<p><strong>Web Files (/var/www/html):</strong></p>
+<pre>{{ files_result.stdout }}</pre>
+</body>
+</html>

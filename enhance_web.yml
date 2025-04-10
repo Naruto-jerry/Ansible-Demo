@@ -1,0 +1,17 @@
+- name: Enhance Nginx web server
+  hosts: azure_vms
+  become: yes
+  tasks:
+    - name: Install unzip
+      apt:
+        name: unzip
+        state: present
+    - name: Create a welcome page
+      copy:
+        content: "<h1>Welcome to Jagruti's Ansible Shop!</h1><p>Built on {{ ansible_date_time.date }}</p>"
+        dest: /var/www/html/welcome.html
+    - name: Add a user for web management
+      user:
+        name: webadmin
+        state: present
+        groups: www-data

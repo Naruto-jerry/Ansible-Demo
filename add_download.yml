@@ -1,0 +1,16 @@
+- name: Add downloadable file to website
+  hosts: azure_vms
+  become: yes
+  tasks:
+    - name: Create a sample PDF file
+      copy:
+        content: "This is Jagruti's sample menu - built with Ansible!"
+        dest: /var/www/html/menu.txt
+    - name: Set file permissions
+      file:
+        path: /var/www/html/menu.txt
+        mode: "0644"
+    - name: Restart Nginx
+      service:
+        name: nginx
+        state: restarted

@@ -1,0 +1,24 @@
+- name: Update index page with dashboard link for Project 2
+  hosts: azure_vms
+  become: yes
+  tasks:
+    - name: Update index page
+      copy:
+        content: |
+          <html>
+          <head><title>Jagruti's Ansible Site</title></head>
+          <body>
+          <h1>Jagruti's Ansible Site</h1>
+          <p>Visit my pages:</p>
+          <ul>
+          <li><a href="/welcome.html">Welcome</a></li>
+          <li><a href="/goodbye.html">Goodbye</a></li>
+          <li><a href="/dashboard2.html">System Dashboard (Project 2)</a></li>
+          </ul>
+          </body>
+          </html>
+        dest: /var/www/html/index.html
+    - name: Restart Nginx
+      service:
+        name: nginx
+        state: restarted

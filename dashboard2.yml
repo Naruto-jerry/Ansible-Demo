@@ -1,0 +1,21 @@
+- name: Create a system dashboard for Project 2
+  hosts: azure_vms
+  become: yes
+  tasks:
+    - name: Gather system uptime
+      command: uptime
+      register: uptime_result
+    - name: Gather disk space
+      command: df -h /
+      register: disk_result
+    - name: List web files
+      command: ls -l /var/www/html
+      register: files_result
+    - name: Create dashboard page
+      template:
+        src: dashboard2.j2
+        dest: /var/www/html/dashboard2.html
+    - name: Restart Nginx
+      service:
+        name: nginx
+        state: restarted

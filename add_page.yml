@@ -1,0 +1,8 @@
+- name: add another page
+  hosts: azure_vms
+  become: yes
+  tasks:
+    - name: create goodbye message
+      copy:
+        content: "<h> Goodbye from Jagruti Ansible shop! <h><p> see yaa again tommorow <p> "
+        dest: /var/www/html/goodbye.html
