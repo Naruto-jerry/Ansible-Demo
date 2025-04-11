@@ -1,0 +1,10 @@
+- name: Bootstrap Python 3.9 on all VMs
+  hosts: restaurant
+  gather_facts: no
+  tasks:
+    - name: Add deadsnakes PPA (for Ubuntu)
+      raw: sudo apt update && sudo apt install -y software-properties-common && sudo add-apt-repository -y ppa:deadsnakes/ppa
+    - name: Install Python 3.9
+      raw: sudo apt update && sudo apt install -y python3.9
+    - name: Install pip for Python 3.9
+      raw: sudo apt install -y python3.9-distutils && curl https://bootstrap.pypa.io/get-pip.py | sudo python3.9

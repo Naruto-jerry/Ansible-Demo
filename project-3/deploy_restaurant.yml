@@ -1,0 +1,71 @@
+- name: Deploy Customer App
+  hosts: customer
+  become: yes
+  tasks:
+    - name: Install Nginx
+      apt:
+        name: nginx
+        state: present
+    - name: Start Nginx
+      service:
+        name: nginx
+        state: started
+        enabled: yes
+    - name: Deploy Customer App page
+      copy:
+        content: "<h1>Welcome to the Customer App!</h1>"
+        dest: /var/www/html/index.html
+
+- name: Deploy Vendor App
+  hosts: vendor
+  become: yes
+  tasks:
+    - name: Install Nginx
+      apt:
+        name: nginx
+        state: present
+    - name: Start Nginx
+      service:
+        name: nginx
+        state: started
+        enabled: yes
+    - name: Deploy Vendor App page
+      copy:
+        content: "<h1>Welcome to the Vendor App!</h1>"
+        dest: /var/www/html/index.html
+
+- name: Deploy Delivery App
+  hosts: delivery
+  become: yes
+  tasks:
+    - name: Install Nginx
+      apt:
+        name: nginx
+        state: present
+    - name: Start Nginx
+      service:
+        name: nginx
+        state: started
+        enabled: yes
+    - name: Deploy Delivery App page
+      copy:
+        content: "<h1>Welcome to the Delivery App!</h1>"
+        dest: /var/www/html/index.html
+
+- name: Deploy Admin App
+  hosts: admin
+  become: yes
+  tasks:
+    - name: Install Nginx
+      apt:
+        name: nginx
+        state: present
+    - name: Start Nginx
+      service:
+        name: nginx
+        state: started
+        enabled: yes
+    - name: Deploy Admin App page
+      copy:
+        content: "<h1>Welcome to the Admin App!</h1>"
+        dest: /var/www/html/index.html

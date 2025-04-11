@@ -1,0 +1,168 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "adminUsername": { "type": "string", "defaultValue": "jtestadmin" },
+    // Change: Removed defaultValue for adminPassword to use Key Vault (arm_ansible.json had "defaultValue": "Orange@987654321")
+    "adminPassword": { "type": "securestring" }
+  },
+  "variables": {
+    // Change: Updated names to reflect restaurant project (arm_ansible.json used "jtestvnet", "jtestsubnet", "jtestnsg")
+    "location": "eastus",
+    "vnetName": "restaurant-vnet",
+    "subnetName": "restaurant-subnet",
+    "nsgName": "restaurant-nsg"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "apiVersion": "2020-06-01",
+      "name": "[variables('nsgName')]",
+      "location": "[variables('location')]",
+      "properties": {
+        "securityRules": [
+          {
+            "name": "SSH",
+            "properties": {
+              "priority": 1000,
+              "protocol": "Tcp",
+              "access": "Allow",
+              "direction": "Inbound",
+              "sourceAddressPrefix": "*",
+              "sourcePortRange": "*",
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "22"
+            }
+          },
+          // Change: Added HTTP rule for port 80 (arm_ansible.json only had SSH; we added HTTP manually later)
+          {
+            "name": "HTTP",
+            "properties": {
+              "priority": 1001,
+              "protocol": "Tcp",
+              "access": "Allow",
+              "direction": "Inbound",
+              "sourceAddressPrefix": "*",
+              "sourcePortRange": "*",
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "80"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Network/virtualNetworks",
+      "apiVersion": "2020-06-01",
+      "name": "[variables('vnetName')]",
+      "location": "[variables('location')]",
+      "dependsOn": ["[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"],
+      "properties": {
+        "addressSpace": { "addressPrefixes": ["10.0.0.0/16"] },
+        "subnets": [
+          {
+            "name": "[variables('subnetName')]",
+            "properties": {
+              "addressPrefix": "10.0.1.0/24",
+              "networkSecurityGroup": {
+                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Network/publicIPAddresses",
+      "apiVersion": "2020-06-01",
+      // Change: Name now uses copyIndex() to create four IPs (arm_ansible.json had a single "jtest-ip")
+      "name": "[concat('customer-ip-', copyIndex())]",
+      "location": "[variables('location')]",
+      // Change: Added copy loop to create four public IPs (arm_ansible.json had one)
+      "copy": { "name": "publicIPCopy", "count": 4 },
+      "properties": {
+        // Change: Set to Static (arm_ansible.json used "Dynamic")
+        "publicIPAllocationMethod": "Static"
+      }
+    },
+    {
+      "type": "Microsoft.Network/networkInterfaces",
+      "apiVersion": "2020-06-01",
+      // Change: Name now uses copyIndex() (arm_ansible.json had a single "jtest-nic")
+      "name": "[concat('customer-nic-', copyIndex())]",
+      "location": "[variables('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/publicIPAddresses', concat('customer-ip-', copyIndex()))]",
+        "[resourceId('Microsoft.Network/virtualNetworks', variables('vnetName'))]"
+      ],
+      // Change: Added copy loop for four NICs (arm_ansible.json had one)
+      "copy": { "name": "nicCopy", "count": 4 },
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses', concat('customer-ip-', copyIndex()))]"
+              },
+              "subnet": {
+                "id": "[concat(resourceId('Microsoft.Network/virtualNetworks', variables('vnetName')), '/subnets/', variables('subnetName'))]"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Compute/virtualMachines",
+      "apiVersion": "2020-06-01",
+      // Change: Name now uses copyIndex() for four VMs (arm_ansible.json had a single "jtest-app005")
+      "name": "[concat('restaurant-vm-', copyIndex())]",
+      "location": "[variables('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/networkInterfaces', concat('customer-nic-', copyIndex()))]"
+      ],
+      // Change: Added copy loop for four VMs (arm_ansible.json had one)
+      "copy": { "name": "vmCopy", "count": 4 },
+      "properties": {
+        "hardwareProfile": { "vmSize": "Standard_B1s" },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "Canonical",
+            "offer": "UbuntuServer",
+            "sku": "18.04-LTS",
+            "version": "latest"
+          },
+          "osDisk": {
+            "createOption": "FromImage",
+            "managedDisk": { "storageAccountType": "Standard_LRS" }
+          }
+        },
+        "osProfile": {
+          "computerName": "[concat('restaurant-vm-', copyIndex())]",
+          "adminUsername": "[parameters('adminUsername')]",
+          "adminPassword": "[parameters('adminPassword')]"
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', concat('customer-nic-', copyIndex()))]"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  // Change: Added outputs to return public IPs (arm_ansible.json had no outputs)
+  // Fix: Changed copy from array to object and removed "name" field (not required in outputs copy)
+  "outputs": {
+    "publicIPs": {
+      "type": "array",
+      "copy": {
+        "count": 4,
+        "input": "[reference(concat('customer-ip-', copyIndex())).ipAddress]"
+      }
+    }
+  }
+}
