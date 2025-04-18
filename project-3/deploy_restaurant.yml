@@ -51,21 +51,3 @@
       copy:
         content: "<h1>Welcome to the Delivery App!</h1>"
         dest: /var/www/html/index.html
-
-- name: Deploy Admin App
-  hosts: admin
-  become: yes
-  tasks:
-    - name: Install Nginx
-      apt:
-        name: nginx
-        state: present
-    - name: Start Nginx
-      service:
-        name: nginx
-        state: started
-        enabled: yes
-    - name: Deploy Admin App page
-      copy:
-        content: "<h1>Welcome to the Admin App!</h1>"
-        dest: /var/www/html/index.html

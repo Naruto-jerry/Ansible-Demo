@@ -1,0 +1,71 @@
+- name: Set up central web server on Admin VM
+  hosts: admin
+  become: yes
+  tasks:
+    - name: Install Nginx
+      apt:
+        name: nginx
+        state: present
+
+    - name: start Nginx
+      service:
+        name: nginx
+        state: started
+        enabled: yes
+
+    - name: Copy central hub page to default Nginx directory
+      copy:
+        src: restaurant_apps.html
+        dest: /var/www/html/index.html
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Create directory for Admin app subpath
+      file:
+        path: /var/www/html/admin
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+
+    - name: Copy Admin app page to subpath
+      copy:
+        content: "<h1>Welcome to the Admin App!</h1>"
+        dest: /var/www/html/admin/index.html
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Configure Nginx to serve central hub and Admin app
+      copy:
+        content: |
+          server {
+              listen 80;
+              server_name _;
+              root /var/www/html;
+              index index.html;
+
+              location / {
+                  try_files $uri $uri/ /index.html;
+              }
+
+              location /admin/ {
+                  try_files $uri $uri/ /admin/index.html;
+              }
+
+              location /admin {
+                  rewrite ^ /admin/ permanent;
+              }
+          }
+        dest: /etc/nginx/sites-available/default
+        owner: root
+        group: root
+        mode: '0644'
+      notify: Restart Nginx
+
+  handlers:
+    - name: Restart Nginx
+      service:
+        name: nginx
+        state: restarted
